@@ -10,7 +10,7 @@ import {
 } from "./resource";
 
 type SelectedField = {
-  keyPath: string;
+  path: string;
   value: JSONPrimaryValue;
 };
 
@@ -21,87 +21,123 @@ export type JSONExplorerProps = {
 const JSONExplorer = ({ jsonData }: JSONExplorerProps) => {
   const [selectedField, setSelectedField] = useState<SelectedField | null>(null);
   const [inputValue, setInputValue] = useState('');
-  
-  const handleKeyClick = (keyPath: string, value: JSONPrimaryValue) => {
-    setSelectedField({ keyPath, value });
-    setInputValue(`res.${keyPath}`);
+  const [collapsedList, setCollapsedList] = useState<Record<string, boolean>>({});
+
+  const handleKeyClick = (path: string, value: JSONPrimaryValue) => {
+    setSelectedField({ path, value });
+    setInputValue(`${path}`);
   };
-  
+
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const formattedPath = event.target.value;
-    const pathItems = formattedPath.split('.');
-    pathItems.shift();
-    const path = pathItems.join('.');
+    const path = event.target.value;
     const value = getValueByPath(path, jsonData);
-    setSelectedField({ keyPath: path, value });
-    setInputValue(formattedPath);
+    setSelectedField({ path, value });
+    setInputValue(path);
   };
-  
-  const renderJSONNode = (data: JSONValue, key = '', path = '') => {
+
+  const handleToggle = (path: string, expanded: boolean) => {
+    setCollapsedList({
+      ...collapsedList,
+      [path]: !expanded,
+    })
+  };
+
+  const renderJSONNode = (data: JSONValue, label = '', path = '') => {
     if (Array.isArray(data)) {
       return (
-        <div>
-          {key && <span>{key}: </span>}
-          {Parenthesis.ArrayOpened}
-          <div className="ml-8">
-            {data.map((item, index) => (
-              <div key={`${path}[${index}]`}>
-                {renderJSONNode(item, `[${index}]`, `${path}[${index}]`)}
+        <div key={path}>
+          {label && (
+            <div
+              className="flex items-center gap-1 cursor-pointer hover:bg-gray-300"
+              onClick={() => handleToggle(path, collapsedList[path])}
+            >
+              <div
+                className=""
+              >
+                {/*{expandedList[path] ? '-' : '+'}*/}
               </div>
-            ))}
-          </div>
-          {Parenthesis.ArrayClosed},
+              <span>
+                {label}:&nbsp;
+                {collapsedList[path] && `${Parenthesis.ArrayOpened} ... ${Parenthesis.ArrayClosed}`}
+              </span>
+            </div>
+          )}
+          {!collapsedList[path] && (
+            <>
+              {Parenthesis.ArrayOpened}
+              <div className="border-l border-gray-400 pl-8">
+                {data.map((item, index) => (
+                  renderJSONNode(item, `[${index}]`, `${path}[${index}]`)
+                ))}
+              </div>
+              {Parenthesis.ArrayClosed},
+            </>
+          )}
         </div>
       );
     } else if (typeof data === 'object' && data !== null) {
       return (
-        <div>
-          {key && !key.match(KeyCheckRegex.ArrayIndex) && <span>{key}: </span>}
-          {Parenthesis.ObjectOpened}
-          <div className="ml-8">
-            {Object.keys(data).map((key) => (
-              <div key={`${path}.${key}`}>
-                {renderJSONNode(data[key], key, path ? `${path}.${key}` : key)}
+        <div key={path}>
+          {label && !label.match(KeyCheckRegex.ArrayIndex) && (
+            <div
+              className="flex items-center gap-1 cursor-pointer hover:bg-gray-300"
+              onClick={() => handleToggle(path, collapsedList[path])}
+            >
+              <div
+                className=""
+              >
+                {/*{expandedList[path] ? '-' : '+'}*/}
               </div>
-            ))}
-          </div>
-          {Parenthesis.ObjectClosed},
+              <span>
+                {label}:&nbsp;
+                {collapsedList[path] && `${Parenthesis.ObjectOpened} ... ${Parenthesis.ObjectClosed}`}
+              </span>
+            </div>
+          )}
+          {!collapsedList[path] && (
+            <>
+              {Parenthesis.ObjectOpened}
+              <div className="border-l border-gray-400 pl-8">
+                {Object.keys(data).map((key) => (
+                  renderJSONNode(data[key], key, path ? `${path}.${key}` : key)
+                ))}
+              </div>
+              {Parenthesis.ObjectClosed},
+            </>
+          )}
         </div>
       );
     } else {
       return (
         <div
+          key={path}
+          className={`node-item group cursor-pointer hover:bg-gray-300 ${selectedField?.path === path && 'bg-gray-300'}`}
           onClick={() => handleKeyClick(path, data)}
         >
-          <span
-            className={`text-blue-600 cursor-pointer hover:underline ${selectedField?.keyPath === path && 'bg-gray-300'}`}>
-            {key}:
-          </span>
+          <span className="text-blue-600">{label}:</span>
           <span className={`ml-2 ${formatValueStyle(data)}`}>{formatValue(data)}</span>
           ,
         </div>
       );
     }
   };
-  
+
   return (
-    <div className="p-16">
-      <div className="mb-8 flex gap-4 items-start">
-        <div>
-          <p className="mb-2">Property</p>
-          <input
-            className="border rounded outline-none p-2"
-            placeholder="Property"
-            value={`${inputValue}`}
-            onChange={handleInputChange}
-          />
-          <p className="mt-1 text-gray-600 text-sm">
-            {selectedField?.value === null ? 'null' : selectedField?.value?.toString() ?? 'Undefined'}
-          </p>
-        </div>
+    <div className="json-explorer">
+      <div className="mb-8">
+        <p className="mb-2">Property</p>
+        <input
+          className="border rounded outline-none p-2 w-full"
+          placeholder="Property"
+          value={`${inputValue}`}
+          onChange={handleInputChange}
+        />
+        <p className="mt-1 text-gray-600 text-sm">
+          {selectedField?.value === null ? 'null' : selectedField?.value?.toString() ?? 'Undefined'}
+        </p>
       </div>
       <p>Response</p>
-      <div className="border border-gray-700 rounded p-4">{renderJSONNode(jsonData)}</div>
+      <div className="data-panel border border-gray-700 rounded p-6">{renderJSONNode(jsonData)}</div>
     </div>
   );
 };
