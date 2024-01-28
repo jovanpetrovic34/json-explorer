@@ -74,7 +74,8 @@ const App = () => {
         <button
           className="border border-primary rounded py-1 px-4"
           disabled={loading}
-          onClick={handleReset}>
+          onClick={handleReset}
+        >
           Reset
         </button>
         <input

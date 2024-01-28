@@ -3,7 +3,6 @@ import {
   JSONPrimaryValue,
   JSONValue,
   Parenthesis,
-  KeyCheckRegex,
   formatValue,
   formatValueStyle,
   getValueByPath
@@ -46,31 +45,31 @@ const JSONExplorer = ({ jsonData }: JSONExplorerProps) => {
     if (Array.isArray(data)) {
       return (
         <div key={path}>
-          {label && (
+          <div
+            className="flex items-center gap-1 cursor-pointer hover:bg-gray-300"
+            onClick={() => handleToggle(path, collapsedList[path])}
+          >
             <div
-              className="flex items-center gap-1 cursor-pointer hover:bg-gray-300"
-              onClick={() => handleToggle(path, collapsedList[path])}
+              className=""
             >
-              <div
-                className=""
-              >
-                {/*{expandedList[path] ? '-' : '+'}*/}
-              </div>
+              {/*{expandedList[path] ? '-' : '+'}*/}
+            </div>
+            {label && (
               <span>
                 {label}:&nbsp;
-                {collapsedList[path] && `${Parenthesis.ArrayOpened} ... ${Parenthesis.ArrayClosed}`}
               </span>
-            </div>
-          )}
+            )}
+            {Parenthesis.ArrayOpened}
+            {collapsedList[path] && ` ... ${Parenthesis.ArrayClosed}`}
+          </div>
           {!collapsedList[path] && (
             <>
-              {Parenthesis.ArrayOpened}
               <div className="border-l border-gray-400 pl-8">
                 {data.map((item, index) => (
-                  renderJSONNode(item, `[${index}]`, `${path}[${index}]`)
+                  renderJSONNode(item, `${index}`, `${path}[${index}]`)
                 ))}
               </div>
-              {Parenthesis.ArrayClosed},
+              <span>{Parenthesis.ArrayClosed},</span>
             </>
           )}
         </div>
@@ -78,31 +77,31 @@ const JSONExplorer = ({ jsonData }: JSONExplorerProps) => {
     } else if (typeof data === 'object' && data !== null) {
       return (
         <div key={path}>
-          {label && !label.match(KeyCheckRegex.ArrayIndex) && (
+          <div
+            className="flex items-center gap-1 cursor-pointer hover:bg-gray-300"
+            onClick={() => handleToggle(path, collapsedList[path])}
+          >
             <div
-              className="flex items-center gap-1 cursor-pointer hover:bg-gray-300"
-              onClick={() => handleToggle(path, collapsedList[path])}
+              className=""
             >
-              <div
-                className=""
-              >
-                {/*{expandedList[path] ? '-' : '+'}*/}
-              </div>
+              {/*{expandedList[path] ? '-' : '+'}*/}
+            </div>
+            {label && (
               <span>
                 {label}:&nbsp;
-                {collapsedList[path] && `${Parenthesis.ObjectOpened} ... ${Parenthesis.ObjectClosed}`}
               </span>
-            </div>
-          )}
+            )}
+            {Parenthesis.ObjectOpened}
+            {collapsedList[path] && ` ... ${Parenthesis.ObjectClosed}`}
+          </div>
           {!collapsedList[path] && (
             <>
-              {Parenthesis.ObjectOpened}
               <div className="border-l border-gray-400 pl-8">
                 {Object.keys(data).map((key) => (
                   renderJSONNode(data[key], key, path ? `${path}.${key}` : key)
                 ))}
               </div>
-              {Parenthesis.ObjectClosed},
+              <span>{Parenthesis.ObjectClosed},</span>
             </>
           )}
         </div>
@@ -124,7 +123,7 @@ const JSONExplorer = ({ jsonData }: JSONExplorerProps) => {
 
   return (
     <div className="json-explorer">
-      <div className="mb-8">
+      <div className="mb-4">
         <p className="mb-2">Property</p>
         <input
           className="border rounded outline-none p-2 w-full"
