@@ -6,7 +6,7 @@ import {
   formatValue,
   formatValueStyle,
   getValueByPath
-} from "./resource";
+} from './resource';
 
 type SelectedField = {
   path: string;

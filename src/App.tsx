@@ -1,7 +1,8 @@
+import React, { ChangeEvent, useState } from 'react';
+
 import JSONExplorer from './components/JSONExplorer';
+import { JSONValue } from './components/JSONExplorer/resource';
 import './App.css';
-import React, {ChangeEvent, useState} from "react";
-import {JSONValue} from "./components/JSONExplorer/resource";
 
 const JSONData = {
   "date": "2021-10-27T07:49:14.896Z",
